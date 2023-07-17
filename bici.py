@@ -43,26 +43,28 @@ def metropolis_step(temperature, size, spins, i, j):
     return spins
 
 
-def update_lattice(temperature, size, spins):
-    for i, j in it.product(range(size), repeat=2):
-        spins = metropolis_step(temperature, size, spins, i, j)
+def update_lattice(mc_steps, spins, temperature, size):
+    for _ in range(mc_steps):
+        for i, j in it.product(range(size), repeat=2):
+            spins = metropolis_step(temperature, size, spins, i, j)
 
     return spins
 
 
-def ising_model(mc_steps, each, temperature, size):
+def run(mc_steps, each, temperature, size):
+    nviz = int(mc_steps / each)
+
     spins = initializate_lattice(size, ordered=False)
-
     thermodynamics = [statistics(spins)]
-    for i in range(mc_steps):
-        spins = update_lattice(temperature, size, spins)
 
-        if i % each == 0:
-            thermodynamics.append(statistics(spins))
+    for _ in range(nviz):
+        spins = update_lattice(each, spins, temperature, size)
+        thermodynamics.append(statistics(spins))
 
     energy, magnetization = np.hsplit(np.asarray(thermodynamics), 2)
 
-    return energy, magnetization
+    plt.scatter(list(range(0, mc_steps + 1, each)), magnetization / size ** 2)
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -71,9 +73,6 @@ if __name__ == "__main__":
     critic_temperature = 2.269185
     temperature = 0.8 * critic_temperature
 
-    size = 20
+    size = 32
 
-    energy, magnetization = ising_model(mc_steps, each, temperature, size)
-
-    plt.scatter(list(range(1 + int(mc_steps / each))), magnetization / size ** 2)
-    plt.show()
+    run(mc_steps, each, temperature, size)
