@@ -9,6 +9,7 @@ class IsingModel:
     def __init__(
         self,
         mc_steps=10000,
+        eq_steps=0,
         each=100,
         temperature=2.269185,
         size=32,
@@ -16,6 +17,7 @@ class IsingModel:
         visualize=True,
     ):
         self.mc_steps = mc_steps
+        self.eq_steps = eq_steps
         self.each = each
         self.temperature = temperature
         self.size = size
@@ -59,27 +61,29 @@ class IsingModel:
             self.spins_[i, j] = -self.spins_[i, j]
 
     def _update_lattice(self):
-        for _ in range(self.each):
-            for i, j in it.product(range(self.size), repeat=2):
-                self._metropolis_step(i, j)
+        for i, j in it.product(range(self.size), repeat=2):
+            self._metropolis_step(i, j)
 
     def run(self):
-        self.nviz_ = int(self.mc_steps / self.each)
-
         self._initializate_lattice()
+
+        for _ in range(self.eq_steps):
+            self._update_lattice()
+
         self._statistics()
 
         if self.visualize:
             self.viz_ = IsingVisualization()
             self.viz_.show_frame(self)
 
-        for _ in range(self.nviz_):
+        for i in range(self.eq_steps, self.mc_steps):
             self._update_lattice()
 
-            self._statistics()
+            if i % self.each == 0:
+                self._statistics()
 
-            if self.visualize:
-                self.viz_.show_frame(self)
+                if self.visualize:
+                    self.viz_.show_frame(self)
 
         self.energy_ = np.asarray(self.energy_)
         self.magnetization_ = np.asarray(self.magnetization_)
