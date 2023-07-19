@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from PIL import Image
-
 
 class IsingModel:
     def __init__(
@@ -90,9 +88,6 @@ class IsingModel:
         self.energy_ = np.asarray(self.energy_)
         self.magnetization_ = np.asarray(self.magnetization_)
 
-        if self.visualize:
-            self.viz_.save_gif()
-
 
 class IsingVisualization:
     def __init__(self):
@@ -101,9 +96,6 @@ class IsingVisualization:
             figsize=(10, 5),
             layout="constrained",
         )
-
-        self._frames = []
-        self._i = 0
 
     def show_frame(self, ising):
         self._axd["left"].clear()
@@ -130,25 +122,11 @@ class IsingVisualization:
             ising.energy_,
         )
 
-        plt.savefig(f"frame{self._i}.png", dpi=300)
-        frame = Image.open(f"frame{self._i}.png")
-        self._frames.append(frame.copy())
-        self._i += 1
-
         plt.pause(0.001)
-
-    def save_gif(self):
-        self._frames[0].save(
-            "animation.gif",
-            save_all=True,
-            append_images=self._frames[1:],
-            duration=500,
-            optimize=False,
-        )
 
 
 def main():
-    ising = IsingModel(mc_steps=100, each=1, temperature=1.8, ordered=False)
+    ising = IsingModel(mc_steps=120, each=1, temperature=1.8, ordered=True)
     ising.run()
 
 
