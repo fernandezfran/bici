@@ -22,18 +22,29 @@ class IsingModel:
         self.ordered = ordered
         self.visualize = visualize
 
-    def _show_viz_frame(self, ax):
-        ax[0].clear()
-        ax[0].set_xlabel("L")
-        ax[0].set_ylabel("L")
-        ax[0].imshow(self.spins_)
+    def _show_viz_frame(self, axd):
+        axd["left"].clear()
+        axd["left"].set_title(
+            f"Ising model with {self.spins_.size} spins at T={self.temperature}"
+        )
+        axd["left"].set_xlabel("L")
+        axd["left"].set_ylabel("L")
+        axd["left"].imshow(self.spins_)
 
-        ax[1].clear()
-        ax[1].set_xlabel("MC step")
-        ax[1].set_ylabel(r"|M| / N$_{spins}$")
-        ax[1].scatter(
+        axd["upper right"].clear()
+        axd["upper right"].set_xlabel("MC step")
+        axd["upper right"].set_ylabel(r"|M| / N$_{spins}$")
+        axd["upper right"].scatter(
             list(range(0, self.each * len(self.magnetization_), self.each)),
             self.magnetization_,
+        )
+
+        axd["lower right"].clear()
+        axd["lower right"].set_xlabel("MC step")
+        axd["lower right"].set_ylabel(r"E / N$_{spins}$")
+        axd["lower right"].scatter(
+            list(range(0, self.each * len(self.energy_), self.each)),
+            self.energy_,
         )
 
         plt.tight_layout()
@@ -89,8 +100,12 @@ class IsingModel:
         self.magnetization_ = [magn / self.spins_.size]
 
         if self.visualize:
-            fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
-            self._show_viz_frame(ax)
+            fig, axd = plt.subplot_mosaic(
+                [["left", "upper right"], ["left", "lower right"]],
+                figsize=(10, 5),
+                layout="constrained",
+            )
+            self._show_viz_frame(axd)
 
         for _ in range(self.nviz_):
             self._update_lattice()
@@ -100,14 +115,14 @@ class IsingModel:
             self.magnetization_.append(magn / self.spins_.size)
 
             if self.visualize:
-                self._show_viz_frame(ax)
+                self._show_viz_frame(axd)
 
         self.energy_ = np.asarray(self.energy_)
         self.magnetization_ = np.asarray(self.magnetization_)
 
 
 def main():
-    ising = IsingModel(temperature=1.8, ordered=False)
+    ising = IsingModel(mc_steps=200, each=1, temperature=1.8, ordered=False)
     ising.run()
 
 
