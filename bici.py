@@ -22,6 +22,8 @@ class IsingModel:
         self.ordered = ordered
         self.visualize = visualize
 
+        self.energy_, self.magnetization_ = [], []
+
     def _initializate_lattice(self):
         self.spins_ = (
             np.ones((self.size, self.size))
@@ -37,11 +39,10 @@ class IsingModel:
 
         nearest_neighbors = up + down + left + right
 
-        energy = -np.sum(self.spins_ * nearest_neighbors) / 2
-
-        magnetization = np.abs(np.sum(self.spins_))
-
-        return energy, magnetization
+        self.energy_.append(
+            -np.sum(self.spins_ * nearest_neighbors) / 2 / self.spins_.size
+        )
+        self.magnetization_.append(np.abs(np.mean(self.spins_)))
 
     def _metropolis_step(self, i, j):
         nearest_neighbors = (
@@ -66,10 +67,7 @@ class IsingModel:
         self.nviz_ = int(self.mc_steps / self.each)
 
         self._initializate_lattice()
-
-        ener, magn = self._statistics()
-        self.energy_ = [ener / self.spins_.size]
-        self.magnetization_ = [magn / self.spins_.size]
+        self._statistics()
 
         if self.visualize:
             self.viz_ = IsingVisualization()
@@ -78,9 +76,7 @@ class IsingModel:
         for _ in range(self.nviz_):
             self._update_lattice()
 
-            ener, magn = self._statistics()
-            self.energy_.append(ener / self.spins_.size)
-            self.magnetization_.append(magn / self.spins_.size)
+            self._statistics()
 
             if self.visualize:
                 self.viz_.show_frame(self)
@@ -104,7 +100,7 @@ class IsingVisualization:
         )
         self._axd["left"].set_xlabel("L")
         self._axd["left"].set_ylabel("L")
-        self._axd["left"].imshow(ising.spins_)
+        self._axd["left"].imshow(ising.spins_, vmin=-1, vmax=1)
 
         self._axd["upper right"].clear()
         self._axd["upper right"].set_xlabel("MC step")
