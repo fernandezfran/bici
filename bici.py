@@ -122,7 +122,7 @@ class IsingVisualization:
 
 
 def main():
-    ising = IsingModel(mc_steps=120, each=1, temperature=1.8, ordered=True)
+    ising = IsingModel(mc_steps=120, each=1, temperature=1.8, ordered=False)
     ising.run()
 
 
