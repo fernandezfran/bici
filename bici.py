@@ -22,6 +22,23 @@ class IsingModel:
         self.ordered = ordered
         self.visualize = visualize
 
+    def _show_viz_frame(self, ax):
+        ax[0].clear()
+        ax[0].set_xlabel("L")
+        ax[0].set_ylabel("L")
+        ax[0].imshow(self.spins_)
+
+        ax[1].clear()
+        ax[1].set_xlabel("MC step")
+        ax[1].set_ylabel(r"|M| / N$_{spins}$")
+        ax[1].scatter(
+            list(range(0, self.each * len(self.magnetization_), self.each)),
+            self.magnetization_,
+        )
+
+        plt.tight_layout()
+        plt.pause(0.001)
+
     def _initializate_lattice(self):
         self.spins_ = (
             np.ones((self.size, self.size))
@@ -66,20 +83,27 @@ class IsingModel:
         self.nviz_ = int(self.mc_steps / self.each)
 
         self._initializate_lattice()
-        self.thermodynamics_ = [self._statistics()]
+
+        ener, magn = self._statistics()
+        self.energy_ = [ener / self.spins_.size]
+        self.magnetization_ = [magn / self.spins_.size]
+
+        if self.visualize:
+            fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
+            self._show_viz_frame(ax)
 
         for _ in range(self.nviz_):
             self._update_lattice()
-            self.thermodynamics_.append(self._statistics())
 
-        energy, magnetization = np.hsplit(np.asarray(self.thermodynamics_), 2)
+            ener, magn = self._statistics()
+            self.energy_.append(ener / self.spins_.size)
+            self.magnetization_.append(magn / self.spins_.size)
 
-        if self.visualize:
-            plt.scatter(
-                list(range(0, self.mc_steps + 1, self.each)),
-                magnetization / self.size ** 2,
-            )
-            plt.show()
+            if self.visualize:
+                self._show_viz_frame(ax)
+
+        self.energy_ = np.asarray(self.energy_)
+        self.magnetization_ = np.asarray(self.magnetization_)
 
 
 def main():
