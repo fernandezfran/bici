@@ -22,34 +22,6 @@ class IsingModel:
         self.ordered = ordered
         self.visualize = visualize
 
-    def _show_viz_frame(self, axd):
-        axd["left"].clear()
-        axd["left"].set_title(
-            f"Ising model with {self.spins_.size} spins at T={self.temperature}"
-        )
-        axd["left"].set_xlabel("L")
-        axd["left"].set_ylabel("L")
-        axd["left"].imshow(self.spins_)
-
-        axd["upper right"].clear()
-        axd["upper right"].set_xlabel("MC step")
-        axd["upper right"].set_ylabel(r"|M| / N$_{spins}$")
-        axd["upper right"].scatter(
-            list(range(0, self.each * len(self.magnetization_), self.each)),
-            self.magnetization_,
-        )
-
-        axd["lower right"].clear()
-        axd["lower right"].set_xlabel("MC step")
-        axd["lower right"].set_ylabel(r"E / N$_{spins}$")
-        axd["lower right"].scatter(
-            list(range(0, self.each * len(self.energy_), self.each)),
-            self.energy_,
-        )
-
-        plt.tight_layout()
-        plt.pause(0.001)
-
     def _initializate_lattice(self):
         self.spins_ = (
             np.ones((self.size, self.size))
@@ -100,12 +72,8 @@ class IsingModel:
         self.magnetization_ = [magn / self.spins_.size]
 
         if self.visualize:
-            fig, axd = plt.subplot_mosaic(
-                [["left", "upper right"], ["left", "lower right"]],
-                figsize=(10, 5),
-                layout="constrained",
-            )
-            self._show_viz_frame(axd)
+            self.viz_ = IsingVisualization()
+            self.viz_.show_frame(self)
 
         for _ in range(self.nviz_):
             self._update_lattice()
@@ -115,10 +83,46 @@ class IsingModel:
             self.magnetization_.append(magn / self.spins_.size)
 
             if self.visualize:
-                self._show_viz_frame(axd)
+                self.viz_.show_frame(self)
 
         self.energy_ = np.asarray(self.energy_)
         self.magnetization_ = np.asarray(self.magnetization_)
+
+
+class IsingVisualization:
+    def __init__(self):
+        self._fig, self._axd = plt.subplot_mosaic(
+            [["left", "upper right"], ["left", "lower right"]],
+            figsize=(10, 5),
+            layout="constrained",
+        )
+
+    def show_frame(self, ising):
+        self._axd["left"].clear()
+        self._axd["left"].set_title(
+            f"Ising model with {ising.spins_.size} spins at T={ising.temperature}"
+        )
+        self._axd["left"].set_xlabel("L")
+        self._axd["left"].set_ylabel("L")
+        self._axd["left"].imshow(ising.spins_)
+
+        self._axd["upper right"].clear()
+        self._axd["upper right"].set_xlabel("MC step")
+        self._axd["upper right"].set_ylabel(r"|M| / N$_{spins}$")
+        self._axd["upper right"].scatter(
+            list(range(0, ising.each * len(ising.magnetization_), ising.each)),
+            ising.magnetization_,
+        )
+
+        self._axd["lower right"].clear()
+        self._axd["lower right"].set_xlabel("MC step")
+        self._axd["lower right"].set_ylabel(r"E / N$_{spins}$")
+        self._axd["lower right"].scatter(
+            list(range(0, ising.each * len(ising.energy_), ising.each)),
+            ising.energy_,
+        )
+
+        plt.pause(0.001)
 
 
 def main():
